@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "vietnamtrademark": {
+      "type": "http",
+      "url": "https://mcp.vietnamtrademark.net/mcp"
+    }
+  }
+}

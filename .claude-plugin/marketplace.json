@@ -1,0 +1,17 @@
+{
+  "name": "vietnamtrademark",
+  "owner": {
+    "name": "VietnamTrademark.net",
+    "email": "contact@vietnamtrademark.net"
+  },
+  "metadata": {
+    "description": "Claude plugins from VietnamTrademark.net for Vietnamese trademark and IP gazette lookup."
+  },
+  "plugins": [
+    {
+      "name": "vietnamtrademark",
+      "source": "./",
+      "description": "Look up Vietnamese trademarks and the Vietnam IP gazette through VietnamTrademark MCP."
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "vietnamtrademark",
+  "version": "1.0.0",
+  "description": "Look up Vietnamese trademarks and the Vietnam IP gazette through VietnamTrademark MCP: status, owner, Nice classes, dates, similar-mark clearance checks and gazette notices.",
+  "author": {
+    "name": "VietnamTrademark.net",
+    "email": "contact@vietnamtrademark.net",
+    "url": "https://vietnamtrademark.net"
+  },
+  "homepage": "https://vietnamtrademark.net/mcp-guide",
+  "repository": "https://github.com/vietnamtrademark/vietnamtrademark-plugin",
+  "license": "Apache-2.0",
+  "keywords": ["trademark", "vietnam", "intellectual-property", "gazette", "mcp"]
+}
