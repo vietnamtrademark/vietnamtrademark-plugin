@@ -8,6 +8,10 @@
     "url": "https://vietnamtrademark.net"
   },
   "homepage": "https://vietnamtrademark.net/mcp-guide",
+  "documentationUrl": "https://vietnamtrademark.net/mcp-guide",
+  "privacyPolicyUrl": "https://vietnamtrademark.net/privacy#ai-connectors",
+  "termsOfServiceUrl": "https://vietnamtrademark.net/legal",
+  "supportUrl": "mailto:contact@vietnamtrademark.net",
   "repository": "https://github.com/vietnamtrademark/vietnamtrademark-plugin",
   "license": "Apache-2.0",
   "keywords": ["trademark", "vietnam", "intellectual-property", "gazette", "mcp"]
