@@ -16,6 +16,10 @@ The plugin contains:
 
 Then run `/mcp`, choose `vietnamtrademark` and sign in with your VietnamTrademark.net account. Each successful `search_*` or `get_*_detail` call uses one call from your account quota; `get_reference_categories` and `get_search_guide` are free. Plans and quotas: https://vietnamtrademark.net/mcp-guide
 
+## Privacy
+
+The MCP server receives only the parameters of each tool call (search terms, filters, application or record numbers) together with your account identity, and logs them to meter quota and investigate errors. It does not receive your conversation. See the [Privacy Policy](https://vietnamtrademark.net/privacy#ai-connectors) for what is collected, how long it is kept and how to contact us.
+
 ## Example questions
 
 - "Is the mark PHỞ THÌN registered in Vietnam, and who owns it?"
