@@ -35,12 +35,22 @@ Câu hỏi và câu trả lời mẫu trong file này viết bằng tiếng Vi�
 
 `AND`, `OR`, `NOT` phải viết HOA; `and`, `or` viết thường bị coi là một từ để tìm.
 
-### Quy tắc dùng `~` (gần đúng)
+### Quy tắc dùng `~`
 
-- Tối đa 2 sửa đổi; `từ~` không ghi số nghĩa là `~2`.
+`~N` có hai nghĩa tùy vị trí: sau **một từ** (`solie~1`) là gần đúng chính tả, N là số ký tự thêm, bớt, thay, đảo; sau **cụm trong ngoặc kép** (`"la solie"~2`) là khoảng cách giữa các từ, N là số vị trí từ được xê dịch.
+
+Gần đúng trên một từ, **tính theo độ dài từ**, không theo số từ của nhãn:
+
+- Tối đa 2 sửa đổi; `từ~` không ghi số nghĩa là `~2`. `từ~3` trở lên bị Lucene hạ xuống `~2` mà không báo lỗi, nên không dùng.
 - Từ 1–3 ký tự: **không** dùng `~`, vì `an~1` khớp gần như mọi nhãn có từ 2–3 chữ. Từ 4–5 ký tự: `~1`. Từ 6 ký tự trở lên: `~1`, chỉ dùng `~2` khi cần quét rộng.
 - Mỗi từ có `~` chỉ được mở rộng thành tối đa 50 từ gần nhất có trong chỉ mục. Từ quá phổ biến có thể bị sót biến thể; khi đó bổ sung biến thể cụ thể bằng `OR`.
-- `~` sau một từ là gần đúng; `~` sau cụm trong ngoặc kép là khoảng cách giữa các từ. Không đặt `~` hay `*` bên trong ngoặc kép, và không ghép `*` với `~` trong cùng một từ.
+
+Khoảng cách cụm, **tính theo số từ của nhãn**:
+
+- Nhãn 1 từ: không cần. Nhãn 2 từ: `"a b"~2` (đủ để bắt đảo thứ tự: AN MINH ↔ MINH AN). Nhãn từ 3 từ: `"a b c"~3`.
+- Khoảng cách cụm chỉ bắt thêm từ hoặc đảo thứ tự, **không** bắt biến thể chính tả: `"la solie"~2` không bắt được LA SOIE, LASOL, SOLIS. Nhãn nhiều từ phải gộp cả hai cách trong một lượt: `"la solie"~2 OR solie~1 OR lasol*`.
+
+Không đặt `~` hay `*` bên trong ngoặc kép (`"la solie~1"` không phải gần đúng), và không ghép `*` với `~` trong cùng một từ. Muốn bắt buộc từ có mặt kèm gần đúng, dùng `+`: `+minh~1 +an`.
 
 ### Quy tắc dùng `*` và `?`
 
@@ -48,6 +58,7 @@ Câu hỏi và câu trả lời mẫu trong file này viết bằng tiếng Vi�
 - `*` ở đầu từ (`*mart`) được phép nhưng chậm; chỉ dùng khi cần bắt hậu tố.
 - Cần ít nhất 3 ký tự cố định: `vi*` hay `a*` quá rộng, vô dụng.
 - `?` chỉ thay đúng 1 ký tự. Âm có nhiều cách viết khác độ dài (`ph`/`f`, `gi`/`d`, `oo`/`u`) thì liệt kê bằng `OR`: `phone OR fone`.
+- Ba cách đặt wildcard trên phần đặc trưng, dùng khi cần quét rộng: theo **phần đầu** (`sol*`), **phần đuôi** (`*olie`), **phần giữa** (`*oli*`); và theo **bộ khung phụ âm**, thay nguyên âm bằng `?` để bắt biến thể khác nguyên âm (`s?l??` cho SOLIE/SOLIS/SALIE). Khung phụ âm cho kết quả rộng, chỉ dùng kèm `nice_class`.
 
 ### Ký tự đặc biệt và lỗi cú pháp
 
@@ -71,11 +82,12 @@ Câu hỏi và câu trả lời mẫu trong file này viết bằng tiếng Vi�
 1. Xác định nhóm Nice của sản phẩm/dịch vụ Y. Nếu chưa rõ, gọi `get_reference_categories(category_type='NiceClass')` (miễn phí). Chưa biết Y và ngữ cảnh không cho biết: hỏi người dùng, hoặc tra trên mọi nhóm và nói rõ điều đó.
    **Trước lượt `search_trademarks` đầu tiên, hỏi phạm vi nhóm** theo mục *Hỏi người dùng về phạm vi nhóm*.
 2. Phân tích tên X trước khi gọi tool:
+   - **Dấu hiệu có đăng ký được không?** Trước khi tra đối chứng, xét xem X có thuộc dấu hiệu không được bảo hộ làm nhãn hiệu (quốc kỳ, quốc huy, biểu tượng tổ chức quốc tế như chữ thập đỏ, tên cơ quan nhà nước, tên thật hoặc hình ảnh lãnh tụ, dấu hiệu lừa dối người tiêu dùng về nguồn gốc, công dụng), hay chỉ gồm yếu tố không có khả năng phân biệt (từ mô tả hàng hóa, hình dạng thông thường, chữ không thuộc hệ Latin không kèm chữ Latin, tên địa lý). Có thì nói rõ ngay; vẫn tra tiếp nếu người dùng muốn. Cũng ghi nhận nếu X trùng hoặc là biến thể của nhãn nổi tiếng ở lĩnh vực khác (HUYNDAI, hình quả táo cắn dở): bậc 0 bên dưới dùng để kiểm tra điều này bằng dữ liệu.
    - Chuyển chữ thường, bỏ dấu.
-   - Tách **phần đặc trưng** khỏi từ mô tả, chỉ dẫn chung ("coffee", "food", "group", "pharma", "việt nam", "shop", "tea"…). Xung đột thường nằm ở phần đặc trưng.
+   - Tách **phần đặc trưng** khỏi từ mô tả, chỉ dẫn chung ("coffee", "food", "group", "pharma", "việt nam", "shop", "tea", mạo từ "la", "the"…). Xung đột thường nằm ở phần đặc trưng. Từ mô tả, địa danh đi kèm đối chứng ("DU VIETNAM") cũng không làm giảm tương tự.
    - Ghi ra các biến thể **dấu hiệu**, chia ba mức:
      - **D1 – trùng, gần trùng:** cụm đầy đủ, viết liền và tách (`minhan` / `minh an`), các từ đặc trưng bắt buộc cùng có mặt, và các biến thể âm dễ nhầm cụ thể (c/k/q, ph/f, i/y, s/x, d/gi/z, v/w, ch/tr, nh/ng, oo/u, ee/i), vì `kodak` và `codak` gần như là trùng.
-     - **D2 – tương tự chính tả:** `~`, `*`, `?` trên phần đặc trưng, theo quy tắc độ dài từ ở trên.
+     - **D2 – tương tự chính tả:** `~`, `*`, `?` trên phần đặc trưng theo quy tắc độ dài từ ở trên; khoảng cách cụm theo số từ; tiền tố của dạng viết liền cả cụm (`lasol*` bắt LASOL ↔ LA SOLIE); khung phụ âm khi cần quét rộng.
      - **D3 – tương tự ý nghĩa:** nếu X có nghĩa rõ, bản dịch Anh–Việt ("mat troi" ↔ "sun"), vì tương tự về ý nghĩa cũng là căn cứ từ chối.
    - Ghi ra **từ khóa hàng hóa/dịch vụ** của Y, chia hai mức (chữ thường không dấu, dùng `*` cho dạng biến đổi):
      - **Hẹp:** tên gọi chính của Y và từ đồng nghĩa trực tiếp. Ví dụ quán cà phê: `"quan ca phe" OR cafe OR coffee`; sữa chua: `"sua chua" OR yogurt OR yaourt*`.
@@ -84,6 +96,7 @@ Câu hỏi và câu trả lời mẫu trong file này viết bằng tiếng Vi�
 
    | Bậc | Dấu hiệu | Hàng hóa / nhóm | Tham số |
    | --- | --- | --- | --- |
+   | 0 | D1 (chỉ cụm trùng và dạng viết liền, không có biến thể âm) | **Mọi nhóm** | `query` D1 rút gọn, không `nice_class`, không `goods_services`; phát hiện nhãn trùng ở nhóm xa và nhãn nổi tiếng. Không dừng thang vì bậc này; kết quả chỉ là ghi nhận |
    | 1 | D1 | Hàng hóa trùng Y trong nhóm chính | `query` D1, `nice_class=<nhóm chính>`, `include_related_classes=false`, `goods_services` hẹp |
    | 2 | D1 | Cả nhóm chính | như bậc 1, bỏ `goods_services` |
    | 3 | D2 | Cả nhóm chính | `query` D2, `nice_class=<nhóm chính>`, `include_related_classes=false` |
@@ -96,6 +109,7 @@ Câu hỏi và câu trả lời mẫu trong file này viết bằng tiếng Vi�
    **Điều kiện dừng và bỏ qua bậc:**
    - **Dừng sớm** khi đã có nhãn `Cấp bằng` hoặc `Đang giải quyết` mà dấu hiệu trùng/tương tự **và** hàng hóa trùng/tương tự (rủi ro cao). Câu trả lời ghi rõ các bậc đã bỏ qua.
    - **`total = 0` hoặc ít kết quả không phải lý do dừng**: chạy tiếp bậc sau.
+   - **Bỏ bậc 0** khi X là từ thông dụng hoặc tên người phổ biến ("minh an", "sun"): trùng ở nhóm xa không nói lên gì và `total` sẽ rất lớn. Chạy bậc 0 với tên tự đặt, tên có thể là biến thể của nhãn nổi tiếng, hoặc khi lập báo cáo.
    - **Bỏ bậc 1** khi tên X hiếm (từ ghép tự đặt như "vinamilk", "kodak"): chạy thẳng bậc 2, vì trong nhóm chính đã ít kết quả. Tên phổ biến (từ thông dụng, tên người như "minh an") thì luôn chạy bậc 1, để nhãn có hàng hóa trùng không bị nhãn cùng tên ở hàng hóa khác đẩy khỏi trang 1.
    - **Bỏ bậc 4** khi người dùng chọn phạm vi (1) chỉ nhóm chính; câu trả lời nhắc một dòng rằng chưa xét nhóm liên quan.
    - **Không có nhóm chính** (chưa biết Y và người dùng muốn tra mọi nhóm): chạy bậc 1–3 không có `nice_class` (bậc 1 vẫn giữ `goods_services` hẹp nếu biết từ khóa hàng hóa), bỏ bậc 4, và nói rõ điều đó trong câu trả lời.
@@ -103,9 +117,33 @@ Câu hỏi và câu trả lời mẫu trong file này viết bằng tiếng Vi�
    - Chỉ xem trang 1 (đã xếp theo độ liên quan). `total` vài trăm trở lên là truy vấn quá rộng: siết lại ngay tại bậc đó (`~2` → `~1`, thêm `+`, bỏ wildcard ngắn) thay vì lật trang; ở bậc 4 có thể bỏ phần D2, chỉ giữ D1. Nói rõ đã siết thế nào.
    - `total = 0` ở bậc gần đúng là tín hiệu tốt, nhưng không phải bảo đảm. Nêu rõ những biến thể đã tra.
    - Ở bậc có `goods_services`, kiểm tra mục hàng hóa khớp nằm ở nhóm nào (xem lưu ý về `goods_services` ở trên).
-5. **So sánh hàng hóa/dịch vụ** của từng nhãn gần với X, theo mục *So sánh hàng hóa, dịch vụ* bên dưới. Không kết luận trùng hàng hóa chỉ vì trùng nhóm Nice.
-6. `get_trademark_detail` chỉ khi cần thông tin ngoài danh mục: tiến trình xử lý, gia hạn, yếu tố loại trừ (tối đa 3 nhãn). Link mẫu nhãn đã có sẵn trong kết quả tìm.
-7. Đánh giá rủi ro theo thang dưới đây.
+5. **So sánh dấu hiệu** và **so sánh hàng hóa/dịch vụ** của từng nhãn gần với X, theo hai mục cùng tên bên dưới. Không kết luận trùng hàng hóa chỉ vì trùng nhóm Nice.
+6. **Chọn nhãn làm đối chứng** theo mục *Nhãn nào là đối chứng* bên dưới.
+7. `get_trademark_detail` chỉ khi cần thông tin ngoài danh mục: tiến trình xử lý, gia hạn, yếu tố loại trừ, ngày chấm dứt hiệu lực (tối đa 3 nhãn; lập báo cáo: tối đa 5). Link mẫu nhãn đã có sẵn trong kết quả tìm.
+8. Đánh giá rủi ro theo thang dưới đây. Lập báo cáo cho khách hàng: chuyển sang `references/registrability-report.md`.
+
+## So sánh dấu hiệu
+
+Mức tương tự của dấu hiệu, từ gần nhất tới xa nhất:
+
+1. **Trùng:** cùng chữ, khác hoa thường, dấu cách hoặc dấu thanh (LA SOLIE ↔ La Solie ↔ LASOLIE).
+2. **Gần trùng:** khác 1 ký tự thêm, bớt, thay ở phần đặc trưng (SOLIE ↔ SOIE, SOLIS); hoặc biến thể âm dễ nhầm (KODAK ↔ CODAK).
+3. **Chứa nguyên phần đặc trưng** của X, có thêm từ khác (MAILÉI SOLIE chứa SOLIE; MINH AN FOOD chứa MINH AN). Từ thêm vào là từ mô tả hoặc địa danh thì vẫn ở mức này.
+4. **Trùng phần đầu** khi đọc liền (LASOL ↔ LA SOLIE), hoặc tương tự cách phát âm dù viết khác.
+5. **Tương tự ý nghĩa:** bản dịch, từ đồng nghĩa (MẶT TRỜI ↔ SUN).
+6. **Chỉ trùng phần mô tả** hoặc phần đã bị loại trừ bảo hộ ở đối chứng: không tính là tương tự.
+
+Lưu ý khi đọc kết quả: tên nhãn trong dữ liệu có thể là dạng chuẩn hóa của chữ cách điệu (nhãn "L A S☼L" được lưu là "LASOL"), nên dạng viết liền và từ khóa trong tên hiển thị đều cần xét. Bạn không nhìn thấy mẫu nhãn, nên tương tự về hình chỉ ghi nhận khi người dùng mô tả hoặc khi phân loại hình (Vienna) trong `get_trademark_detail` trùng với hình của X.
+
+## Nhãn nào là đối chứng
+
+Với mỗi nhãn tìm được có dấu hiệu tương tự và hàng hóa trùng/tương tự, xét tình trạng pháp lý để quyết định có là đối chứng gây cản trở không:
+
+- **Nhãn của chính người dùng** (cùng chủ đơn, hoặc người dùng nói là công ty liên quan): ghi nhận, không tính là cản trở.
+- **`Cấp bằng` còn hiệu lực, `Đang giải quyết`, hoặc đơn mới nộp chưa công bố:** đối chứng. Đơn chưa công bố ghi chú rõ "nộp ngày …, chưa công bố".
+- **`Hết hiệu lực`:** vẫn là đối chứng nếu ngày chấm dứt hiệu lực (ngày hết hạn, hoặc bước chấm dứt trong tiến trình) **chưa quá 3 năm** tính đến ngày tra cứu; không rõ ngày thì nói là chưa xác định được. Ngoại lệ: văn bằng bị chấm dứt vì không sử dụng 5 năm liên tục thì không còn là đối chứng.
+- **`Từ chối`:** đối chứng tiềm năng khi quyết định từ chối còn trong thời hiệu khiếu nại (90 ngày từ ngày nhận quyết định); quá thời hiệu thì chỉ ghi nhận. Đơn từng bị từ chối rồi được cấp bằng vẫn là đối chứng bình thường.
+- **Có yếu tố loại trừ** ("không bảo hộ riêng …"): vẫn liệt kê, nhưng phần bị loại trừ có trọng số thấp khi so dấu hiệu.
 
 ## So sánh hàng hóa, dịch vụ
 
@@ -162,13 +200,13 @@ Trong câu trả lời luôn nêu phạm vi nhóm đã tra. Nếu đã chọn (1
 
 ## Thang rủi ro
 
-Rủi ro phụ thuộc đồng thời vào mức tương tự của **dấu hiệu** và của **hàng hóa/dịch vụ** (theo mục trên), chỉ xét nhãn `Cấp bằng` chưa hết hạn hoặc `Đang giải quyết`:
+Rủi ro phụ thuộc đồng thời vào mức tương tự của **dấu hiệu** và của **hàng hóa/dịch vụ** (theo hai mục trên), chỉ xét các nhãn là đối chứng theo mục *Nhãn nào là đối chứng*:
 
 - **Cao**: dấu hiệu trùng hoặc gần trùng (chữ, cách đọc) **và** hàng hóa trùng hoặc tương tự.
-- **Trung bình**: dấu hiệu tương tự (cách đọc, ý nghĩa, phần đặc trưng) và hàng hóa trùng/tương tự; hoặc dấu hiệu trùng nhưng hàng hóa chỉ liên quan xa.
-- **Thấp**: hàng hóa khác hẳn (kể cả khi cùng nhóm); hoặc chỉ còn nhãn `Từ chối` hay thuộc nhóm `Hết hiệu lực` (rút đơn, hết hạn, mất hiệu lực, từ bỏ).
+- **Trung bình**: dấu hiệu tương tự (chứa phần đặc trưng, trùng phần đầu, cách đọc, ý nghĩa) và hàng hóa trùng/tương tự; hoặc dấu hiệu trùng nhưng hàng hóa chỉ liên quan xa.
+- **Thấp**: hàng hóa khác hẳn (kể cả khi cùng nhóm); hoặc không còn nhãn nào là đối chứng (chỉ có nhãn `Từ chối` quá thời hiệu khiếu nại, `Hết hiệu lực` quá 3 năm).
 
-Luôn nêu lý do cho mức đánh giá, kèm số đơn của nhãn gây rủi ro và mục hàng hóa trùng/tương tự trích từ danh mục.
+Luôn nêu lý do cho mức đánh giá, kèm số đơn của nhãn gây rủi ro và mục hàng hóa trùng/tương tự trích từ danh mục. Thang 3 mức này dùng cho câu trả lời nhanh; báo cáo cho khách hàng dùng thang 6 mức khả năng bảo hộ trong `references/registrability-report.md`.
 
 ## Trình bày
 
@@ -180,7 +218,7 @@ Câu đầu là mức rủi ro và lý do. Bảng kết quả gồm: tên nhãn,
 
 1. Quán cà phê là dịch vụ nhóm 43. "COFFEE" là từ mô tả; phần đặc trưng là "minh an".
 2. `get_reference_categories(category_type='NiceClass', class_number='43')`, rồi hỏi phạm vi nhóm như ví dụ ở mục *Hỏi người dùng về phạm vi nhóm*. Giả sử người dùng chọn (3).
-3. "minh an" là tên người phổ biến nên chạy cả bậc 1. Mọi lượt đều kèm `include_goods_services=true, page_size=15`.
+3. "minh an" là tên người phổ biến nên bỏ bậc 0 và chạy cả bậc 1. Mọi lượt đều kèm `include_goods_services=true, page_size=15`.
    - D1: `"minh an"^5 OR minhan OR (+minh +an) OR "ming an"`
    - D2: `minhan~1 OR "minh an"~2 OR (+minh~1 +an)`. Không dùng `an~1` vì "an" chỉ có 2 ký tự.
 4. Bậc 1: `search_trademarks(query=<D1>, nice_class='43', goods_services='"quan ca phe" OR cafe OR coffee')`. Không có nhãn nào ở nhóm 43 có hàng hóa trùng.
@@ -195,9 +233,20 @@ Trả lời: "Rủi ro **cao**: nhãn 'MINH AN' (đơn 4-20xx-xxxxx, Cấp bằn
 1. Tên 8 ký tự, viết liền, tự đặt nên hiếm: bỏ bậc 1. Người khác hay tách "VINA MILK", đổi v/w hoặc chèn chữ. Người dùng đã nói rõ phạm vi (2) nên không hỏi lại.
    - D1: `vinamilk^5 OR "vina milk" OR winamilk`
    - D2: `vinamilk~2 OR vina*milk OR vin?milk OR (+vina* +milk)`
-2. Bậc 2: `search_trademarks(query=<D1>, nice_class='29', include_goods_services=true, page_size=15)`
-3. Bậc 3: như bậc 2 với `query=<D2>`.
-4. Bậc 4: `query='<D1> OR <D2>'`, `nice_class='05, 30, 31, 32, 33, 35, 42, 43'` (các nhóm liên quan của 29 lấy từ `get_reference_categories`, không gồm 29), `include_related_classes=false`. Nếu `total` quá lớn, siết lại: bỏ `(+vina* +milk)`, đổi `~2` thành `~1`.
-5. Bậc 5: bỏ `nice_class`, `query` như bậc 4, `goods_services='sua OR milk OR "sua chua" OR yogurt OR "do uong"'`.
-6. Bỏ bậc 6: "vina milk" chỉ mang nghĩa mô tả.
-7. Với từng nhãn, so danh mục với "sữa và sản phẩm từ sữa": nhãn ở nhóm 32 đăng ký "nước khoáng" là **khác**, dù nhóm 32 là nhóm liên quan.
+2. Bậc 0: `search_trademarks(query='vinamilk OR "vina milk"', include_goods_services=true, page_size=15)`, không lọc nhóm, để biết tên này đã được đăng ký ở những nhóm nào và có phải nhãn nổi tiếng không.
+3. Bậc 2: `search_trademarks(query=<D1>, nice_class='29', include_goods_services=true, page_size=15)`
+4. Bậc 3: như bậc 2 với `query=<D2>`.
+5. Bậc 4: `query='<D1> OR <D2>'`, `nice_class='05, 30, 31, 32, 33, 35, 42, 43'` (các nhóm liên quan của 29 lấy từ `get_reference_categories`, không gồm 29), `include_related_classes=false`. Nếu `total` quá lớn, siết lại: bỏ `(+vina* +milk)`, đổi `~2` thành `~1`.
+6. Bậc 5: bỏ `nice_class`, `query` như bậc 4, `goods_services='sua OR milk OR "sua chua" OR yogurt OR "do uong"'`.
+7. Bỏ bậc 6: "vina milk" chỉ mang nghĩa mô tả.
+8. Với từng nhãn, so danh mục với "sữa và sản phẩm từ sữa": nhãn ở nhóm 32 đăng ký "nước khoáng" là **khác**, dù nhóm 32 là nhóm liên quan.
+
+**Hỏi:** "Lập báo cáo khả năng bảo hộ cho nhãn LA SOLIE, nhóm 25 quần áo"
+
+1. Phần đặc trưng là "solie" ("la" là mạo từ). Tên tự đặt, 2 từ. Hỏi phạm vi nhóm; giả sử chọn (2). Lập báo cáo nên chạy bậc 0.
+   - D1: `"la solie"^5 OR lasolie OR solie`
+   - D2: `solie~1 OR "la solie"~2 OR lasol* OR sol?e`
+2. Bậc 0 (`query='"la solie" OR lasolie'`, không lọc nhóm), bậc 2 (D1, nhóm 25), bậc 3 (D2, nhóm 25), bậc 4 (D1 OR D2, các nhóm liên quan của 25 trừ 25), bậc 5 (D1 OR D2, `goods_services='"quan ao" OR "trang phuc" OR clothing OR garment*'`). Bỏ bậc 1 (tên hiếm) và bậc 6 (không có nghĩa rõ).
+3. So dấu hiệu từng nhãn: MAILÉI SOLIE chứa nguyên "SOLIE" (mức 3); LA SOIE DU VIETNAM khác 1 ký tự ở phần đặc trưng, "DU VIETNAM" là địa danh (mức 2); LASOL trùng phần đầu khi đọc liền (mức 4); SOLIS khác 1 ký tự cuối (mức 2); DE LA SOIE có yếu tố loại trừ "DE LA SOIE" nên trọng số thấp. Tất cả đăng ký quần áo nhóm 25: hàng hóa trùng.
+4. `get_trademark_detail` cho các nhãn sẽ đưa vào báo cáo (tối đa 5) để lấy ngày công bố, phân loại hình, yếu tố loại trừ, tiến trình.
+5. Chuyển sang `references/registrability-report.md`: không có nhãn trùng hoàn toàn, nhưng ba nhãn tương tự còn hiệu lực hoặc đang giải quyết cho hàng hóa trùng, nên mức **TRUNG BÌNH, 55-60%**; nêu lý do theo từng đối chứng.

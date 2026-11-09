@@ -5,7 +5,7 @@ description: 'Tra cứu nhãn hiệu và công báo sở hữu công nghiệp Vi
 
 # Tra cứu nhãn hiệu Việt Nam (VNTM)
 
-Skill này dùng các tool của VietnamTrademark MCP (`search_trademarks`, `get_trademark_detail`, `search_gazettes`, `get_gazette_detail`, `get_reference_categories`, `get_search_guide`) để trả lời câu hỏi về nhãn hiệu Việt Nam bằng dữ liệu thật. Mọi tool đều chỉ đọc.
+Skill này dùng các tool của MCP server `vietnamtrademark` (trong Claude Code: `mcp__vietnamtrademark__<tên tool>`) để trả lời câu hỏi về nhãn hiệu Việt Nam bằng dữ liệu thật. Mọi tool đều chỉ đọc.
 
 File này chứa nguyên tắc chung và bảng định tuyến. Hướng dẫn chi tiết cho từng loại việc nằm trong thư mục `references/`; **chỉ đọc file tương ứng với việc đang làm**, đọc trước khi gọi tool.
 
@@ -22,13 +22,14 @@ File này chứa nguyên tắc chung và bảng định tuyến. Hướng dẫn 
 
 - Mỗi lượt `search_*` hoặc `get_*_detail` thành công trừ 1 lượt của người dùng. `get_reference_categories` và `get_search_guide` miễn phí. Lượt bị từ chối vì lỗi tham số không bị trừ.
 - Dùng `page_size` lớn nhất server cho phép thay vì lật trang; thu hẹp bằng điều kiện lọc.
-- Ngân sách mặc định cho một yêu cầu: **tối đa 4 lượt search và 3 lượt detail**. Riêng tìm nhãn trùng/tương tự theo thang trong `references/similarity-search.md`: **tối đa 6 lượt search**. Cần nhiều hơn thì nói ước tính số lượt và hỏi người dùng trước.
+- Ngân sách mặc định cho một yêu cầu: **tối đa 4 lượt search và 3 lượt detail**. Riêng tìm nhãn trùng/tương tự theo thang trong `references/similarity-search.md`: **tối đa 7 lượt search**. Lập báo cáo khả năng đăng ký theo `references/registrability-report.md`: thang tìm tương tự cộng **tối đa 5 lượt detail** cho các nhãn đối chứng chủ yếu. Cần nhiều hơn thì nói ước tính số lượt và hỏi người dùng trước.
 
 ## Định tuyến theo ý định
 
 | Người dùng muốn | Dấu hiệu | Đọc |
 | --- | --- | --- |
 | Tìm nhãn trùng/tương tự, kiểm tra tên trước khi nộp đơn, đánh giá rủi ro | "có trùng không", "đăng ký X cho Y được không", "nhãn tương tự", "giống", "gần giống", có toán tử `~ * ?` | `references/similarity-search.md` |
+| Lập **báo cáo** kết quả tra cứu chuyên sâu, đánh giá khả năng bảo hộ theo thang 6 mức cho khách hàng | "lập báo cáo", "kết quả tra cứu chuyên sâu", "khả năng bảo hộ bao nhiêu phần trăm", "đánh giá khả năng đăng ký để gửi khách hàng" | `references/similarity-search.md` để tìm, rồi `references/registrability-report.md` để đánh giá và viết báo cáo |
 | Tình trạng, chủ sở hữu, ngày tháng, hồ sơ của **một** nhãn | số đơn `4-YYYY-NNNNN`, số bằng, "X đã đăng ký chưa", "của ai", "còn hiệu lực không" | `references/record-lookup.md` |
 | Danh mục nhãn của một chủ đơn; đơn mới, văn bằng, chuyển nhượng, gia hạn trên công báo | tên công ty/đại diện SHCN, "theo dõi", "công báo", số `CB467`, Madrid, khoảng ngày | `references/owner-and-gazette.md` |
 | Mã nhóm Nice của sản phẩm, ý nghĩa trạng thái | "nhóm mấy", "trạng thái X là gì" | gọi thẳng `get_reference_categories` |
@@ -54,12 +55,12 @@ Riêng việc tìm nhãn trùng/tương tự có thêm **câu hỏi về phạm 
 
 ## Nếu không thấy file trong `references/`
 
-Skill có thể được cài thiếu thư mục `references/`, hoặc bạn đang đọc file này qua tool `get_search_guide`. Khi đó gọi `get_search_guide` (miễn phí) với `topic` tương ứng: `similarity` → `references/similarity-search.md`, `record` → `references/record-lookup.md`, `gazette` → `references/owner-and-gazette.md`. Các nguyên tắc trong file này áp dụng chung cho mọi chủ đề.
+Skill có thể được cài thiếu thư mục `references/`, hoặc bạn đang đọc file này qua tool `get_search_guide`. Khi đó gọi `get_search_guide` (miễn phí) với `topic` tương ứng: `similarity` → `references/similarity-search.md`, `record` → `references/record-lookup.md`, `gazette` → `references/owner-and-gazette.md`. File `references/registrability-report.md` chưa có `topic` riêng, chỉ tải được qua URL. Các file này đều có tại `https://vietnamtrademark.net/mcp-skill/vietnamtrademark-search/file?path=references/<tên file>` (danh sách đầy đủ: `https://vietnamtrademark.net/mcp-skill/vietnamtrademark-search/files`). Các nguyên tắc trong file này áp dụng chung cho mọi chủ đề.
 
-## Nếu không thấy tool của VietnamTrademark MCP
+## Nếu không thấy tool của server `vietnamtrademark`
 
-MCP server chưa kết nối. Plugin này đã khai báo server; trong Claude Code, người dùng chạy `/mcp` và đăng nhập tài khoản vietnamtrademark.net để cấp quyền. Trên Claude (web, Desktop, mobile), người dùng thêm connector VietnamTrademark.net. Khi chưa có dữ liệu VNTM, thông tin về một nhãn cụ thể chưa được kiểm chứng với hồ sơ hiện hành.
+MCP server chưa được cấu hình hoặc chưa kết nối. Cách kết nối: trên Claude (web, Desktop, mobile) thêm connector VietnamTrademark.net; trên Claude Code và các công cụ lập trình khác, lấy API key ở trang "Cài đặt MCP" trên vietnamtrademark.net và thêm server `vietnamtrademark` vào cấu hình MCP (hướng dẫn tại `https://vietnamtrademark.net/mcp-guide`). Khi chưa có dữ liệu VNTM, thông tin về một nhãn cụ thể chưa được kiểm chứng với hồ sơ hiện hành.
 
 ## Prompt dựng sẵn
 
-Server có 3 prompt (trong Claude Code hiện thành slash command của server), mỗi prompt ứng với một file tham chiếu: `check_trademark name [goods]` → `similarity-search.md`; `trademark_status number` → `record-lookup.md`; `monitor_gazette owner [date_from] [date_to]` → `owner-and-gazette.md`. Mỗi prompt nêu các bước của tình huống đó; hướng dẫn trong file tương ứng và ngân sách lượt ở trên áp dụng kèm.
+Server có 3 prompt (trong Claude Code gõ `/mcp__vietnamtrademark__<tên>`), mỗi prompt ứng với một file tham chiếu: `check_trademark name [goods]` → `similarity-search.md`; `trademark_status number` → `record-lookup.md`; `monitor_gazette owner [date_from] [date_to]` → `owner-and-gazette.md`. Mỗi prompt nêu các bước của tình huống đó; hướng dẫn trong file tương ứng và ngân sách lượt ở trên áp dụng kèm.

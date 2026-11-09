@@ -5,7 +5,7 @@ Look up trademarks filed and registered in Vietnam, and notices in the Vietnam I
 The plugin contains:
 
 - **MCP server** `vietnamtrademark` (`https://mcp.vietnamtrademark.net/mcp`): read-only tools `search_trademarks`, `get_trademark_detail`, `search_gazettes`, `get_gazette_detail`, `get_reference_categories`, `get_search_guide`, and 3 prompts (`check_trademark`, `trademark_status`, `monitor_gazette`).
-- **Skill** `vietnamtrademark-search`: how to route a question to the right tool, a narrow-to-broad workflow for similar-mark clearance checks, call budgets and answer format.
+- **Skill** `vietnamtrademark-search`: how to route a question to the right tool, a narrow-to-broad workflow for similar-mark clearance checks, a 6-level registrability report for clients (`references/registrability-report.md`), call budgets and answer format.
 
 ## Install
 
